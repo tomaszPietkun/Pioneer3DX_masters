@@ -3,4 +3,4 @@ def pr(name):
 
 
 if __name__ == '__main__':
-    pr("Pioneer")
+    pr("Pioneer3DX")
