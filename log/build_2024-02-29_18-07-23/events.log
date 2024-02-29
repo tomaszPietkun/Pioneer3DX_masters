@@ -1,0 +1,6 @@
+[0.000000] (-) TimerEvent: {}
+[0.000314] (-) JobUnselected: {'identifier': 'amr_robots_description'}
+[0.000407] (-) JobUnselected: {'identifier': 'amr_robots_gazebo'}
+[0.000462] (-) JobUnselected: {'identifier': 'amr_robots_launchfiles'}
+[0.000507] (-) JobUnselected: {'identifier': 'pioneer_pkg'}
+[0.000552] (-) EventReactorShutdown: {}

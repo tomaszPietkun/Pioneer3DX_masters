@@ -1,0 +1,41 @@
+[0.121s] Invoking command in '/home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/build/amr_robots_description': /usr/bin/cmake /home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/description -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/install/amr_robots_description
+[0.150s] [0mCMake Deprecation Warning at CMakeLists.txt:1 (cmake_minimum_required):
+[0.150s]   Compatibility with CMake < 2.8.12 will be removed from a future version of
+[0.150s]   CMake.
+[0.151s] 
+[0.151s]   Update the VERSION argument <min> value or use a ...<max> suffix to tell
+[0.151s]   CMake that the project does not need compatibility with older versions.
+[0.151s] 
+[0.151s] [0m
+[0.290s] -- The C compiler identification is GNU 11.4.0
+[0.452s] -- The CXX compiler identification is GNU 11.4.0
+[0.466s] -- Detecting C compiler ABI info
+[0.589s] -- Detecting C compiler ABI info - done
+[0.596s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.596s] -- Detecting C compile features
+[0.597s] -- Detecting C compile features - done
+[0.601s] -- Detecting CXX compiler ABI info
+[0.707s] -- Detecting CXX compiler ABI info - done
+[0.714s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.714s] -- Detecting CXX compile features
+[0.715s] -- Detecting CXX compile features - done
+[0.729s] [31mCMake Error at CMakeLists.txt:4 (find_package):
+[0.729s]   By not providing "Findcatkin.cmake" in CMAKE_MODULE_PATH this project has
+[0.729s]   asked CMake to find a package configuration file provided by "catkin", but
+[0.729s]   CMake did not find one.
+[0.729s] 
+[0.730s]   Could not find a package configuration file provided by "catkin" with any
+[0.730s]   of the following names:
+[0.730s] 
+[0.730s]     catkinConfig.cmake
+[0.730s]     catkin-config.cmake
+[0.730s] 
+[0.730s]   Add the installation prefix of "catkin" to CMAKE_PREFIX_PATH or set
+[0.730s]   "catkin_DIR" to a directory containing one of the above files.  If "catkin"
+[0.730s]   provides a separate development package or SDK, be sure it has been
+[0.731s]   installed.
+[0.731s] 
+[0.731s] [0m
+[0.731s] -- Configuring incomplete, errors occurred!
+[0.731s] See also "/home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/build/amr_robots_description/CMakeFiles/CMakeOutput.log".
+[0.733s] Invoked command in '/home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/build/amr_robots_description' returned '1': /usr/bin/cmake /home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/description -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/install/amr_robots_description
