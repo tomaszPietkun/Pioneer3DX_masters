@@ -1,1 +1,0 @@
-Invoking command in '/home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/build/amr_robots_launchfiles': /usr/bin/cmake /home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/amr-ros-config-master/launch -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/install/amr_robots_launchfiles

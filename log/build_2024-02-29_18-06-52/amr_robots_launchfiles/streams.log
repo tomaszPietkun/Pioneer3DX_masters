@@ -1,5 +1,0 @@
-[0.124s] Invoking command in '/home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/build/amr_robots_launchfiles': /usr/bin/cmake --build /home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/build/amr_robots_launchfiles -- -j16 -l16
-[0.139s] [0mCMake Error: The source directory "/home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/amr-ros-config-master/launch" does not exist.
-[0.139s] Specify --help for usage, or press the help button on the CMake GUI.[0m
-[0.140s] gmake: *** [Makefile:138: cmake_check_build_system] Error 1
-[0.384s] Invoked command in '/home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/build/amr_robots_launchfiles' returned '2': /usr/bin/cmake --build /home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/build/amr_robots_launchfiles -- -j16 -l16

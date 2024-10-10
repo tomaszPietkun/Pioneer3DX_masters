@@ -1,2 +1,0 @@
-Invoking command in '/home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/build/amr_robots_gazebo': /usr/bin/cmake --build /home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/build/amr_robots_gazebo -- -j16 -l16
-Invoked command in '/home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/build/amr_robots_gazebo' returned '2': /usr/bin/cmake --build /home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/build/amr_robots_gazebo -- -j16 -l16

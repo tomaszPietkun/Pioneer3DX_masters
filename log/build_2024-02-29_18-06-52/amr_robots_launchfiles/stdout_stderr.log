@@ -1,3 +1,0 @@
-[0mCMake Error: The source directory "/home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/amr-ros-config-master/launch" does not exist.
-Specify --help for usage, or press the help button on the CMake GUI.[0m
-gmake: *** [Makefile:138: cmake_check_build_system] Error 1

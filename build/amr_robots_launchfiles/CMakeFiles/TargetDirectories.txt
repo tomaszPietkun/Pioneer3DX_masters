@@ -1,2 +1,0 @@
-/home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/build/amr_robots_launchfiles/CMakeFiles/edit_cache.dir
-/home/tomasz_pietkun/PycharmProjects/Pioneer3DX_masters/build/amr_robots_launchfiles/CMakeFiles/rebuild_cache.dir
