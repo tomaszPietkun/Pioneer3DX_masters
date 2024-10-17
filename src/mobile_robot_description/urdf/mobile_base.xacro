@@ -95,7 +95,7 @@
     		</geometry>
     	</collision>
 
-    	<xacro:caster_wheel_inertia m="0.5" r="${2*wheel_radius / 2.0}" xyz="0 0 0" rpy="0 0 0" />
+    	<xacro:caster_wheel_inertia m="0.5" r="${wheel_radius / 2.0}" xyz="0 0 0" rpy="0 0 0" />
     </link>
     
     <joint name="base_caster_wheel_joint" type="fixed">
