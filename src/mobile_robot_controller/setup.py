@@ -22,7 +22,8 @@ setup(
         'console_scripts': [
             'lqr_controller = mobile_robot_controller.lqr_controller:main',
             'mpc_controller = mobile_robot_controller.mpc_controller:main',
-            'control = mobile_robot_controller.control:main'
+            'control = mobile_robot_controller.control:main',
+            'ekf_slam = mobile_robot_controller.ekf_slam:main',
         ],
     },
 )
