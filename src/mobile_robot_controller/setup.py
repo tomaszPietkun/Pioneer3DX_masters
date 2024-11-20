@@ -24,6 +24,10 @@ setup(
             'mpc_controller = mobile_robot_controller.mpc_controller:main',
             'control = mobile_robot_controller.control:main',
             'ekf_slam = mobile_robot_controller.ekf_slam:main',
+            'lqr_a_controller = mobile_robot_controller.lqr_a_controller:main',
+            'pf_slam = mobile_robot_controller.pf_slam:main',
+            'lqr_pf_controller = mobile_robot_controller.lqr_pf_controller:main',
+            'move = mobile_robot_controller.move_node:main',
         ],
     },
 )

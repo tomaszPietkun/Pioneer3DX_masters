@@ -15,8 +15,8 @@ class MPCController(Node):
         self.body_radius = 0.5  # Radius of the robot body
         self.prediction_horizon = 10  # Prediction horizon for MPC
         self.dt = 0.1  # Time step in seconds
-        self.delta = 500.0  # Scaling factor for obstacle avoidance cost (increased from 100.0)
-        self.Q = np.diag([300.0, 300.0, 1.0])  # Weight matrix for tracking cost
+        self.delta = 500.0  # Scaling factor for obstacle avoidance cost
+        self.Q = np.eye(2)  # Weight matrix for tracking cost (assuming 2 state variables: x, y)
         self.max_linear_velocity = 1.0  # Maximum linear velocity
         self.max_angular_velocity = 2.0  # Maximum angular velocity
 
@@ -27,19 +27,16 @@ class MPCController(Node):
         self.waypoints = []
         self.trajectory = []  # To store trajectory data
 
-        # Obstacles (dynamic, from LiDAR)
-        self.obstacles = []
+        # Obstacle detection
+        self.min_obstacle_distance = float('inf')  # Will be updated with LiDAR data
+        self.safe_distance_threshold = 1.0  # Safe distance to maintain from obstacles
 
         # Publishers and Subscribers
         self.velocity_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
-        self.odom_subscriber = self.create_subscription(
-            Odometry, '/odom', self.odom_callback, 10)
-        self.goal_pose_subscriber = self.create_subscription(
-            PoseStamped, '/goal_pose', self.goal_pose_callback, 10)
-        self.lidar_subscription = self.create_subscription(
-            LaserScan, '/scan', self.lidar_callback, 10)
-        self.waypoint_count_publisher = self.create_publisher(
-            PoseStamped, '/waypoint_count', 10)
+        self.odom_subscriber = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
+        self.goal_pose_subscriber = self.create_subscription(PoseStamped, '/goal_pose', self.goal_pose_callback, 10)
+        self.lidar_subscriber = self.create_subscription(LaserScan, '/scan', self.lidar_callback, 10)
+        self.waypoint_count_publisher = self.create_publisher(PoseStamped, '/waypoint_count', 10)
 
         # Add predefined waypoints directly
         self.add_predefined_waypoints()
@@ -49,12 +46,13 @@ class MPCController(Node):
 
     def add_predefined_waypoints(self):
         predefined_waypoints = [
-            (1.0, 8.0, 0.0),
-            (7.0, 10.0, 0.0),
-            (11.0, 7.0, 0.0),
-            (4.0, 6.0, 0.0),
-            (7.0, 2.0, 0.0),
-            (0.0, 0.0, 0.0)
+            (1.0, 8.0),
+            (7.0, 10.0),
+            (11.0, 10.0),
+            (7.0, 8.0),
+            (9.0, 2.0),
+            (4.0, 4.0),
+            (0.0, 0.0)
         ]
 
         for waypoint in predefined_waypoints:
@@ -70,55 +68,24 @@ class MPCController(Node):
 
         # Convert quaternion to Euler angle for simplicity
         orientation_q = msg.pose.pose.orientation
-        siny_cosp = 2 * (
-            orientation_q.w * orientation_q.z + orientation_q.x * orientation_q.y)
-        cosy_cosp = 1 - 2 * (
-            orientation_q.y ** 2 + orientation_q.z ** 2)
+        siny_cosp = 2 * (orientation_q.w * orientation_q.z + orientation_q.x * orientation_q.y)
+        cosy_cosp = 1 - 2 * (orientation_q.y * orientation_q.y + orientation_q.z * orientation_q.z)
         self.theta = np.arctan2(siny_cosp, cosy_cosp)
 
         # Save the current state to the trajectory list
         self.trajectory.append((self.x, self.y, self.theta))
 
-    def lidar_callback(self, msg):
-        # Clear previous obstacles
-        self.obstacles = []
-
-        # Get the ranges and angles from the LiDAR message
-        ranges = np.array(msg.ranges)
-        angles = msg.angle_min + np.arange(len(ranges)) * msg.angle_increment
-
-        # Filter out invalid ranges (e.g., inf or NaN)
-        valid_indices = np.isfinite(ranges)
-        ranges = ranges[valid_indices]
-        angles = angles[valid_indices]
-
-        # Limit the number of points to consider (for computational efficiency)
-        max_points = 100  # Adjust as needed
-        if len(ranges) > max_points:
-            indices = np.linspace(0, len(ranges) - 1, max_points).astype(int)
-            ranges = ranges[indices]
-            angles = angles[indices]
-
-        # Convert to Cartesian coordinates in the robot frame
-        x_robot = ranges * np.cos(angles)
-        y_robot = ranges * np.sin(angles)
-
-        # Transform to global frame
-        sin_theta = np.sin(self.theta)
-        cos_theta = np.cos(self.theta)
-        x_global = self.x + cos_theta * x_robot - sin_theta * y_robot
-        y_global = self.y + sin_theta * x_robot + cos_theta * y_robot
-
-        # Update obstacles with the transformed points
-        self.obstacles = list(zip(x_global, y_global))
-
     def goal_pose_callback(self, msg):
-        # Append the goal pose as a waypoint
-        waypoint = (
-            msg.pose.position.x, msg.pose.position.y, msg.pose.orientation.z)
+        # Append the goal pose as a waypoint (only x and y)
+        waypoint = (msg.pose.position.x, msg.pose.position.y)
         self.waypoints.append(waypoint)
         self.get_logger().info(f"Received new waypoint: {waypoint}")
         self.publish_waypoint_count()
+
+    def lidar_callback(self, msg):
+        # Calculate the minimum distance to any object
+        self.min_obstacle_distance = min(msg.ranges)
+        self.get_logger().info(f'Minimum distance to an obstacle: {self.min_obstacle_distance:.2f} m')
 
     def control_loop(self):
         if not self.waypoints:
@@ -127,19 +94,12 @@ class MPCController(Node):
             self.save_trajectory()
             return
 
-        # Calculate the control inputs using MPC
-        v, omega = self.mpc_control(
-            self.x, self.y, self.theta, self.waypoints, self.body_radius, self.dt,
-            self.prediction_horizon)
-
-        # Clip velocities
-        v = np.clip(v, -self.max_linear_velocity, self.max_linear_velocity)
-        omega = np.clip(
-            omega, -self.max_angular_velocity, self.max_angular_velocity)
+        # Calculate the control inputs using MPC, considering obstacle avoidance
+        v, omega = self.mpc_control(self.x, self.y, self.theta, self.waypoints, self.body_radius, self.dt,
+                                    self.prediction_horizon)
 
         # Log the control input values
-        self.get_logger().info(
-            f"Control inputs: linear velocity = {v:.2f}, angular velocity = {omega:.2f}")
+        self.get_logger().info(f"Control inputs: linear velocity = {v:.2f}, angular velocity = {omega:.2f}")
 
         # Create and publish Twist message
         twist = Twist()
@@ -148,12 +108,9 @@ class MPCController(Node):
         self.velocity_publisher.publish(twist)
 
         # If the robot is close to the current waypoint, pop it from the list
-        distance_to_waypoint = np.sqrt(
-            (self.waypoints[0][0] - self.x) ** 2 + (self.waypoints[0][1] - self.y) ** 2)
-        if distance_to_waypoint < 0.9:
+        if np.sqrt((self.waypoints[0][0] - self.x) ** 2 + (self.waypoints[0][1] - self.y) ** 2) < 0.4:
             self.waypoints.pop(0)
-            self.get_logger().info(
-                f"Reached waypoint, remaining waypoints: {len(self.waypoints)}")
+            self.get_logger().info(f"Reached waypoint, remaining waypoints: {len(self.waypoints)}")
             self.publish_waypoint_count()
             self.stop_robot()
             time.sleep(1)
@@ -180,14 +137,12 @@ class MPCController(Node):
         msg.pose.position.y = 0.0
         msg.pose.position.z = 0.0
         self.waypoint_count_publisher.publish(msg)
-        self.get_logger().info(
-            f"Published waypoint count: {len(self.waypoints)}")
+        self.get_logger().info(f"Published waypoint count: {len(self.waypoints)}")
 
     def mpc_control(self, x, y, theta, waypoints, body_radius, dt, prediction_horizon):
         def objective(u):
             cost = 0.0
             x_pred, y_pred, theta_pred = x, y, theta
-            epsilon = 0.5  # Minimum distance to obstacles to avoid division by zero
             for i in range(prediction_horizon):
                 v = u[i]
                 omega = u[prediction_horizon + i]
@@ -195,41 +150,26 @@ class MPCController(Node):
                 y_pred += v * np.sin(theta_pred) * dt
                 theta_pred += omega * dt
 
-                target_x, target_y, target_theta = waypoints[0]
-                state_error = np.array(
-                    [x_pred - target_x, y_pred - target_y, theta_pred - target_theta])
+                target_x, target_y = waypoints[0]
+                state_error = np.array([x_pred - target_x, y_pred - target_y])
                 cost += state_error.T @ self.Q @ state_error
 
-                # Obstacle avoidance term
-                for obs in self.obstacles:
-                    obs_x, obs_y = obs
-                    d = np.sqrt((x_pred - obs_x) ** 2 + (y_pred - obs_y) ** 2)
-                    if d < epsilon:
-                        d = epsilon  # Avoid division by zero
-                    cost += self.delta / d**2  # Using inverse square for smoother gradient
+                # Penalize movement if an obstacle is too close
+                if self.min_obstacle_distance < self.safe_distance_threshold:
+                    cost += self.delta / (self.min_obstacle_distance + 1e-6) ** 2 # Higher cost for closer obstacles
 
                 # Encourage some movement to avoid completely stopping near obstacles
                 cost += 0.1 * (v ** 2 + omega ** 2)
             return cost
 
-        max_v = self.max_linear_velocity
+        def constraints(u):
+            return []
 
-        # Provide a better initial guess using previous control inputs
-        if hasattr(self, 'last_u'):
-            u0 = self.last_u
-        else:
-            u0 = [0.0] * (2 * prediction_horizon)
+        max_v = self.max_linear_velocity if self.min_obstacle_distance > self.safe_distance_threshold else 0.2
 
-        bounds = [(-max_v, max_v)] * prediction_horizon + [
-            (-self.max_angular_velocity, self.max_angular_velocity)] * prediction_horizon
-        constraints = []
-
-        # Run the optimizer with options to improve convergence
-        result = minimize(objective, u0, bounds=bounds, constraints=constraints, options={'maxiter': 100, 'disp': False})
-
-        # Save the last control inputs for warm starting
-        self.last_u = result.x
-
+        u0 = [0.0] * (2 * prediction_horizon)
+        bounds = [(-max_v, max_v)] * prediction_horizon + [(-self.max_angular_velocity, self.max_angular_velocity)] * prediction_horizon
+        result = minimize(objective, u0, bounds=bounds, constraints={'type': 'ineq', 'fun': constraints})
         return result.x[0], result.x[prediction_horizon]
 
     def save_trajectory(self):
@@ -239,8 +179,7 @@ class MPCController(Node):
             writer.writerow(['x', 'y', 'theta'])
             for data in self.trajectory:
                 writer.writerow(data)
-        self.get_logger().info(
-            "Trajectory data saved to 'mpc_robot_trajectory.csv'")
+        self.get_logger().info("Trajectory data saved to 'mpc_robot_trajectory.csv'")
 
 def main(args=None):
     rclpy.init(args=args)
